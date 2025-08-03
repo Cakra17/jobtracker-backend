@@ -5,7 +5,11 @@ import (
 )
 
 type PartialResponse struct {
-	JobTitle       string `json:"job_title"`
+	Id             string `json:"id"`
+	Position       string `json:"position"`
+	Platform       string `json:"platform"`
+	Company        string `json:"company"`
+	Salary         string `json:"salary"`
 	SalaryCurrency string `json:"salary_currency"`
 	Location       string `json:"location"`
 	EmploymentType string `json:"employment_type"`
@@ -15,19 +19,18 @@ type PartialResponse struct {
 }
 
 type FullResponse struct {
-	JobTitle       string    `json:"job_title" validation:"required"`
-	JobUrl         string    `json:"job_url"`
-	JobDescription string    `json:"job_description"`
-	SalaryMin      float64   `json:"salary_min"`
-	SalaryMax      float64   `json:"salary_max"`
+	Id             string    `json:"id"`
+	Position       string    `json:"position"`
+	Company        string    `json:"company"`
+	Platform       string    `json:"platform"`
+	Salary         float64   `json:"salary"`
 	SalaryCurrency string    `json:"salary_currency"`
 	Location       string    `json:"location"`
 	EmploymentType string    `json:"employment_type"`
 	WorkType       string    `json:"work_type"`
 	Status         string    `json:"status"`
 	Priority       string    `json:"priority"`
-	AppliedDate    NullTime   `json:"applied_date"`
-	Deadline       NullTime    `json:"deadline"`
+	AppliedDate    Date `json:"applied_date"`
 	Notes          string    `json:"notes"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`

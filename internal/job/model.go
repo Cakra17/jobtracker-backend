@@ -4,25 +4,23 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-
+	"strings"
 
 	"time"
 )
 
 type JobRequest struct {
-	JobTitle       string      `json:"job_title" validation:"required"`
-	JobUrl         NullString  `json:"job_url"`
-	JobDescription NullString  `json:"job_description"`
-	SalaryMin      NullFloat64 `json:"salary_min"`
-	SalaryMax      NullFloat64 `json:"salary_max"`
-	SalaryCurrency string      `json:"salary_currency"`
-	Location       string      `json:"location"`
-	EmploymentType string      `json:"employment_type"`
-	WorkType       string      `json:"work_type"`
-	Status         string      `json:"status"`
-	Priority       string      `json:"priority"`
-	AppliedDate    NullTime    `json:"applied_date"`
-	Deadline       NullTime    `json:"deadline"`
+	Postion        string      `json:"position" validate:"required"`
+	Platform       string      `json:"platform" validate:"required"`
+	Company        string      `json:"company" validate:"required"`
+	Salary         NullFloat64 `json:"salary"`
+	SalaryCurrency string      `json:"salary_currency" validate:"required"`
+	Location       string      `json:"location" validate:"required"`
+	EmploymentType string      `json:"employment_type" validate:"required"`
+	WorkType       string      `json:"work_type" validate:"required"`
+	Status         string      `json:"status" validate:"required"`
+	Priority       string      `json:"priority" validate:"required"`
+	AppliedDate    Date   `json:"applied_date" validate:"required"`
 	Notes          NullString  `json:"notes"`
 	IsActive       bool        `json:"is_active"`
 }
@@ -31,18 +29,18 @@ type GetJob struct {
 	Limit  uint `query:"limit"`
 	Offset uint `query:"offset"`
 
-	UserId string
+	UserId  string
 	Queries map[string]string
 }
 
 func (j *GetJob) Validate() error {
 	queries := j.Queries
 
-	if _,ok := queries["limit"]; !ok {
+	if _, ok := queries["limit"]; !ok {
 		return errors.New("limit is empty")
 	}
 
-	if _,ok := queries["offset"]; !ok {
+	if _, ok := queries["offset"]; !ok {
 		return errors.New("offset is empty")
 	}
 
@@ -52,19 +50,17 @@ func (j *GetJob) Validate() error {
 type Job struct {
 	ID             string      `db:"id"`
 	User_ID        string      `db:"use_id"`
-	JobTitle       string      `db:"job_title"`
-	JobUrl         NullString  `db:"job_url"`
-	JobDescription NullString  `db:"job_description"`
-	SalaryMin      NullFloat64 `db:"salary_min"`
-	SalaryMax      NullFloat64 `db:"salary_max"`
+	Position        string      `db:"position"`
+	Company        string      `db:"company"`
+	Platform       string      `db:"platform"`
+	Salary         NullFloat64 `db:"salary"`
 	SalaryCurrency string      `db:"salary_currency"`
 	Location       string      `db:"location"`
 	EmploymentType string      `db:"employment_type"`
 	WorkType       string      `db:"work_type"`
 	Status         string      `db:"status"`
 	Priority       string      `db:"priority"`
-	AppliedDate    NullTime    `db:"applied_date"`
-	Deadline       NullTime    `db:"deadline"`
+	AppliedDate    Date   `db:"applied_date"`
 	Notes          NullString  `db:"notes"`
 	IsActive       bool        `db:"is_active"`
 	CreatedAt      time.Time   `db:"created_at"`
@@ -99,56 +95,6 @@ func (ns *NullString) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// NullTime Custom Marshal/Unmarshaler
-type NullTime struct {
-	sql.NullTime
-}
-
-func (nt *NullTime) MarshalJSON() ([]byte, error) {
-	if nt.Valid {
-		return json.Marshal(nt.Time)
-	}
-	return json.Marshal(nil)
-}
-
-func (nt *NullTime) UnmarshalJSON(data []byte) error {
-	var s *string
-	if err := json.Unmarshal(data, &s); err != nil {
-		return err
-	}
-
-	if s == nil || *s == "" {
-		nt.Valid = false
-		return nil
-	}
-
-	t, err := time.Parse(time.RFC3339, *s)
-	if err != nil {
-		// If RFC3339 fails, try other common formats
-		formats := []string{
-			"2006-01-02T15:04:05Z07:00",
-			"2006-01-02T15:04:05",
-			"2006-01-02 15:04:05",
-			"2006-01-02",
-		}
-
-		for _, format := range formats {
-			if t, err = time.Parse(format, *s); err == nil {
-				break
-			}
-		}
-
-		if err != nil {
-			return err
-		}
-	}
-
-	nt.Time = t
-	nt.Valid = true
-
-	return nil
-}
-
 // NullFloat Custom Marshal/Unmarshaler
 type NullFloat64 struct {
 	sql.NullFloat64
@@ -175,4 +121,26 @@ func (nf *NullFloat64) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
+}
+
+type Date time.Time
+
+func (d *Date) UnmarshalJSON(data []byte) error {
+	str := strings.Trim(string(data), "\"")
+	if str == "null" || str == "" {
+		return errors.New("date is malformed")
+	}
+
+	layout := "2006-01-02"
+	t, err := time.Parse(layout, str)
+	if err != nil {
+		return err
+	}
+
+	*d = Date(t)
+	return nil
+}
+
+func (d Date) MarshalJSON() ([]byte, error) {
+	return []byte(time.Time(d).Format("2006-01-02")), nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 type JobRepo struct {
@@ -21,25 +22,13 @@ func (r *JobRepo) AddJob(ctx context.Context, job Job) error {
 	}
 	defer tx.Rollback()
 
-	query := `
-		INSERT INTO 
-			job_applications
-			(id, user_id, job_title, location, salary_currency, employment_type, work_type, status, priority)
-		VALUES
-			(?, ?, ?, ?, ?, ?, ?, ?, ?)
-	`
+	query, value := r.insertBuilder(job)
+
+	// TODO
 	_,err = tx.ExecContext(
 		ctx, 
 		query, 
-		job.ID,
-		job.User_ID,
-		job.JobTitle,
-		job.Location,
-		job.SalaryCurrency,
-		job.EmploymentType,
-		job.WorkType,
-		job.Status,
-		job.Priority,
+		value...
 	)
 
 	if err != nil {
@@ -56,7 +45,9 @@ func (r *JobRepo) GetJobByUserId(ctx context.Context, payload GetJob) ([]Job, er
 		SELECT
 				id,
 				user_id,
-				job_title,
+				position,
+				company,
+				platform,
 				location,
 				salary_currency,
 				employment_type,
@@ -85,7 +76,9 @@ func (r *JobRepo) GetJobByUserId(ctx context.Context, payload GetJob) ([]Job, er
 		if err := rows.Scan(
 			&job.ID,
 			&job.User_ID,
-			&job.JobTitle,
+			&job.Position,
+			&job.Company,
+			&job.Platform,
 			&job.Location,
 			&job.SalaryCurrency,
 			&job.EmploymentType,
@@ -124,19 +117,17 @@ func (r *JobRepo) GetJobById(ctx context.Context, id string) (Job, error) {
 		SELECT
 				id,
 				user_id,
-				job_title,
-				job_url,
-				job_description,
+				position,
+				company,
+				platform,
 				location,
-				salary_min,
-				salary_max,
+				salary,
 				salary_currency,
 				employment_type,
 				work_type,
 				status,
 				priority,
 				applied_date,
-				deadline,
 				notes,
 				is_active,
 				created_at,
@@ -151,19 +142,17 @@ func (r *JobRepo) GetJobById(ctx context.Context, id string) (Job, error) {
 	if err := row.Scan(
 		&job.ID,
 		&job.User_ID,
-		&job.JobTitle,
-		&job.JobUrl,
-		&job.JobDescription,
+		&job.Position,
+		&job.Company,
+		&job.Position,
 		&job.Location,
-		&job.SalaryMin,
-		&job.SalaryMax,
+		&job.Salary,
 		&job.SalaryCurrency,
 		&job.EmploymentType,
 		&job.WorkType,
 		&job.Status,
 		&job.Priority,
 		&job.AppliedDate,
-		&job.Deadline,
 		&job.Notes,
 		&job.IsActive,
 		&job.CreatedAt,
@@ -179,38 +168,34 @@ func (r *JobRepo) UpdateJob(ctx context.Context, job Job) error {
 	query := `
 		UPDATE 
 			job_applications SET
-				job_title = ?,
-				job_url = ?,
-				job_description = ?,
+				position = ?,
+				company = ?,
+				platform = ?,
 				location = ?,
-				salary_min = ?,
-				salary_max = ?,
+				salary = ?,
 				salary_currency = ?,
 				employment_type = ?,
 				work_type = ?,
 				status = ?,
 				priority = ?,
 				applied_date = ?,
-				deadline = ?,
 				notes = ?
 		WHERE
 				id = ?
 	`
 	_, err := r.db.ExecContext(
 		ctx, query, 
-		job.JobTitle,
-		job.JobUrl,
-		job.JobDescription,
+		job.Position,
+		job.Company,
+		job.Platform,
 		job.Location,
-		job.SalaryMin,
-		job.SalaryMax,
+		job.Salary,
 		job.SalaryCurrency,
 		job.EmploymentType,
 		job.WorkType,
 		job.Status,
 		job.Priority,
 		job.AppliedDate,
-		job.Deadline,
 		job.Notes,
 		job.ID,
 	)
@@ -250,4 +235,40 @@ func (r *JobRepo) HardDelete(ctx context.Context, id string) error {
 		return err
 	}
 	return nil
+}
+
+func (r *JobRepo) insertBuilder(job Job) (string, []interface{}) {
+	baseColumn := []string{
+		"id", "user_id", "position", "company", "platform",
+		"location", "employment_type", "work_type", "status",
+		"priority", "applied_date", "salary_currency",
+	}
+
+	str, _ := job.AppliedDate.MarshalJSON()
+	appliedDate := string(str)
+
+	baseValue := []interface{}{
+		job.ID, job.User_ID, job.Position, job.Company, job.Platform,
+		job.Location, job.EmploymentType, job.WorkType, job.Status,
+		job.Priority, appliedDate, job.SalaryCurrency,
+	}
+
+	if job.Salary.Valid {
+		baseColumn = append(baseColumn, "salary")
+		baseValue = append(baseValue, job.Salary.Float64)
+	}
+
+	if job.Notes.Valid {
+		baseColumn = append(baseColumn, "notes")
+		baseValue = append(baseValue, job.Notes.String)
+	}
+
+	columns := strings.Join(baseColumn, ",")
+	placeholder := strings.Repeat("?, ", len(baseValue)-1) + "?"
+
+	query := fmt.Sprintf(`
+		INSERT INTO job_applications (%s)
+		VALUES (%s)`, columns, placeholder)
+	
+	return query, baseValue
 }

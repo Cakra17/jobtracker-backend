@@ -1,7 +1,6 @@
 package job
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/Cakra17/JobTracker-Api/internal/model"
@@ -76,13 +75,18 @@ func (h *jobHandler) AddJob(c *fiber.Ctx) error {
 	job := Job{
 		ID: uuid.NewString(),
 		User_ID: claim.UserID,
-		JobTitle: payload.JobTitle,
+		Position: payload.Postion,
+		Company: payload.Company,
+		Platform: payload.Platform,
 		Location: payload.Location,
 		SalaryCurrency: payload.SalaryCurrency,
 		EmploymentType: payload.EmploymentType,
 		WorkType: payload.WorkType,
 		Status: payload.Status,
 		Priority: payload.Priority,
+		AppliedDate: payload.AppliedDate,
+		Salary: payload.Salary,
+		Notes: payload.Notes,
 	}
 
 	ctx := c.Context()
@@ -138,7 +142,10 @@ func (h *jobHandler) GetAllJobByUserId(c *fiber.Ctx) error {
 	response := []PartialResponse{}
 	for _, job := range jobs {
 		response = append(response, PartialResponse{
-			JobTitle: job.JobTitle,
+			Id: job.ID,
+			Position: job.Position,
+			Platform: job.Platform,
+			Company: job.Company,
 			SalaryCurrency: job.SalaryCurrency,
 			Location: job.Location,
 			EmploymentType: job.EmploymentType,
@@ -175,11 +182,10 @@ func (h *jobHandler) GetJobById(c *fiber.Ctx) error {
 	}
 
 	response := FullResponse{
-		JobTitle: job.JobTitle,
-		JobUrl: job.JobUrl.String,
-		JobDescription: job.JobDescription.String,
-		SalaryMin: job.SalaryMin.Float64,
-		SalaryMax: job.SalaryMax.Float64,
+		Position: job.Position,
+		Company: job.Company,
+		Platform: job.Platform,
+		Salary: job.Salary.Float64,
 		SalaryCurrency: job.SalaryCurrency,
 		Location: job.Location,
 		EmploymentType: job.EmploymentType,
@@ -187,7 +193,6 @@ func (h *jobHandler) GetJobById(c *fiber.Ctx) error {
 		Status: job.Status,
 		Priority: job.Priority,
 		AppliedDate: job.AppliedDate,
-		Deadline: job.Deadline,
 		Notes: job.Notes.String,
 		CreatedAt: job.CreatedAt,
 		UpdatedAt: job.UpdatedAt,
@@ -215,7 +220,6 @@ func (h *jobHandler) UpdateJobById(c *fiber.Ctx) error {
 	id := c.Params("id", "")
 
 	if err := c.BodyParser(&payload); err != nil {
-		fmt.Println(err)
 		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResponse{
 			Status: "fail",
 			Message: "Request malformated",
@@ -231,11 +235,10 @@ func (h *jobHandler) UpdateJobById(c *fiber.Ctx) error {
 
 	job := Job{
 		ID: id,
-		JobTitle: payload.JobTitle,
-		JobUrl: payload.JobUrl,
-		JobDescription: payload.JobDescription,
-		SalaryMin: payload.SalaryMin,
-		SalaryMax: payload.SalaryMax,
+		Position: payload.Postion,
+		Company: payload.Company,
+		Platform: payload.Platform,
+		Salary: payload.Salary,
 		SalaryCurrency: payload.SalaryCurrency,
 		Location: payload.Location,
 		EmploymentType: payload.EmploymentType,
@@ -243,7 +246,6 @@ func (h *jobHandler) UpdateJobById(c *fiber.Ctx) error {
 		Status: payload.Status,
 		Priority: payload.Priority,
 		AppliedDate: payload.AppliedDate,
-		Deadline: payload.Deadline,
 		Notes: payload.Notes,
 	}
 
