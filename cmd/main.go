@@ -73,7 +73,7 @@ func main() {
 	var wg sync.WaitGroup
 	
 	wg.Add(1)
-	go rateLimiterCleanup(ctx, &wg, &rateLimiter, time.Minute * 5, time.Minute * 10)
+	go rateLimiterCleanup(ctx, &wg, &rateLimiter, time.Minute * 10, time.Minute * 30)
 
 	// gracefully shutdown
 	sig := make(chan os.Signal, 1)
