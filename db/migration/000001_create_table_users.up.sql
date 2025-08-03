@@ -1,6 +1,6 @@
 -- auth
 CREATE TABLE IF NOT EXISTS users(
-  id             VARCHAR(36)  PRIMARY KEY DEFAULT UUID(),
+  id             VARCHAR(36) NOT NULL,
   email          VARCHAR(255) UNIQUE NOT NULL,
   username       VARCHAR(255) UNIQUE NOT NULL,
   display_name   VARCHAR(255),
@@ -9,10 +9,11 @@ CREATE TABLE IF NOT EXISTS users(
   password_hash  VARCHAR(255) NOT NULL,
   created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
 ) ENGINE=INNODB;
 
 CREATE TABLE IF NOT EXISTS oauth_accounts (
-  id                  VARCHAR(36) PRIMARY KEY DEFAULT UUID(),
+  id                  VARCHAR(36) NOT NULL,
   user_id             VARCHAR(36) NOT NULL,
   `provider`          VARCHAR(50) NOT NULL,
   provider_account_id VARCHAR(255) NOT NULL,
@@ -23,6 +24,7 @@ CREATE TABLE IF NOT EXISTS oauth_accounts (
   scope               TEXT,
   created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   UNIQUE KEY unique_provider_account (provider, provider_account_id)
 ) ENGINE=INNODB;
