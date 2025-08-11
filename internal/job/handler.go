@@ -102,6 +102,19 @@ func (h *jobHandler) AddJob(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(model.DataResponse {
 		Status: "success",
 		Message: "Job added successfully",
+		Data: PartialResponse{
+			Id: job.ID,
+			Position: job.Position,
+			Platform: job.Platform,
+			Company: job.Company,
+			Salary: job.Salary.Float64,
+			SalaryCurrency: job.SalaryCurrency,
+			Location: job.Location,
+			EmploymentType: job.EmploymentType,
+			WorkType: job.WorkType,
+			Status: job.Status,
+			Priority: job.Priority,
+		},
 	})
 }
 
@@ -120,6 +133,7 @@ func (h *jobHandler) GetAllJobByUserId(c *fiber.Ctx) error {
 	}
 
 	var jobQueries GetJob
+  var stat Stat
 
 	jobQueries.UserId = claim.UserID
 	jobQueries.Queries = c.Queries()
@@ -147,6 +161,7 @@ func (h *jobHandler) GetAllJobByUserId(c *fiber.Ctx) error {
 			Platform: job.Platform,
 			Company: job.Company,
 			SalaryCurrency: job.SalaryCurrency,
+			Salary: job.Salary.Float64,
 			Location: job.Location,
 			EmploymentType: job.EmploymentType,
 			WorkType: job.WorkType,
@@ -155,9 +170,24 @@ func (h *jobHandler) GetAllJobByUserId(c *fiber.Ctx) error {
 		})
 	}
 
+  stat, err = h.jobRepo.GetStat(c.Context(), claim.UserID) 
+  if err != nil {
+    return err
+  }
+
+  statRes := &model.ResponseStat{
+    TotalApplication: stat.TotalApplication,
+    Pending: stat.Pending,
+    Interview: stat.Interview,
+    Rejected: stat.Rejected,
+    WithDraw: stat.WithDraw,
+    Offer: stat.Offer,
+  }
+
 	return c.Status(fiber.StatusOK).JSON(model.DataResponse{
 		Status: "success",
-		Data: response,
+		Data: response, 
+    Stat: statRes,
 	})
 }
 
@@ -257,6 +287,19 @@ func (h *jobHandler) UpdateJobById(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(model.DataResponse{
 		Status: "success",
 		Message: "job updated successfully",
+		Data: PartialResponse{
+			Id: job.ID,
+			Position: job.Position,
+			Platform: job.Platform,
+			Company: job.Company,
+			Salary: job.Salary.Float64,
+			SalaryCurrency: job.SalaryCurrency,
+			Location: job.Location,
+			EmploymentType: job.EmploymentType,
+			WorkType: job.WorkType,
+			Status: job.Status,
+			Priority: job.Priority,
+		},
 	})
 }
 

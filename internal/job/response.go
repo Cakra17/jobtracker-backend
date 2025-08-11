@@ -9,7 +9,7 @@ type PartialResponse struct {
 	Position       string `json:"position"`
 	Platform       string `json:"platform"`
 	Company        string `json:"company"`
-	Salary         string `json:"salary"`
+	Salary         float64 `json:"salary"`
 	SalaryCurrency string `json:"salary_currency"`
 	Location       string `json:"location"`
 	EmploymentType string `json:"employment_type"`
@@ -30,7 +30,7 @@ type FullResponse struct {
 	WorkType       string    `json:"work_type"`
 	Status         string    `json:"status"`
 	Priority       string    `json:"priority"`
-	AppliedDate    Date `json:"applied_date"`
+	AppliedDate    Date 		 `json:"applied_date"`
 	Notes          string    `json:"notes"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`

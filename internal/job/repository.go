@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 )
 
 type JobRepo struct {
@@ -24,7 +25,6 @@ func (r *JobRepo) AddJob(ctx context.Context, job Job) error {
 
 	query, value := r.insertBuilder(job)
 
-	// TODO
 	_,err = tx.ExecContext(
 		ctx, 
 		query, 
@@ -50,6 +50,7 @@ func (r *JobRepo) GetJobByUserId(ctx context.Context, payload GetJob) ([]Job, er
 				platform,
 				location,
 				salary_currency,
+				salary,
 				employment_type,
 				work_type,
 				status,
@@ -58,6 +59,9 @@ func (r *JobRepo) GetJobByUserId(ctx context.Context, payload GetJob) ([]Job, er
 				job_applications
 		WHERE
 				user_id = ?
+		AND
+				is_active = 1
+		ORDER BY created_at DESC
 	`
 	args := []interface{}{payload.UserId}
 
@@ -81,6 +85,7 @@ func (r *JobRepo) GetJobByUserId(ctx context.Context, payload GetJob) ([]Job, er
 			&job.Platform,
 			&job.Location,
 			&job.SalaryCurrency,
+			&job.Salary,
 			&job.EmploymentType,
 			&job.WorkType,
 			&job.Status,
@@ -108,6 +113,36 @@ func getLimitAndOffset(req GetJob) (string, []interface{}) {
 	args := []interface{}{limit, offset}
 
 	return query, args
+}
+
+func(r *JobRepo) GetStat(ctx context.Context, id string) (Stat, error) {
+  var stat Stat
+  query := `
+    SELECT 
+        COUNT(*) AS total_application,
+        SUM(status = "pending") AS pending,
+        SUM(status = "interview") AS interview,
+        SUM(status = "offer") AS offer,
+        SUM(status = "rejected") AS rejected,
+        SUM(status = "withdraw") AS withdraw
+    FROM
+        job_applications
+    WHERE
+        user_id = ?
+  `
+  row := r.db.QueryRowContext(ctx, query, id)
+  if err := row.Scan(
+    &stat.TotalApplication,
+    &stat.Pending,
+    &stat.Interview,
+    &stat.Offer,
+    &stat.Rejected,
+    &stat.WithDraw,
+  ); err != nil {
+    return stat, err
+  }
+
+  return stat, nil
 }
 
 func (r *JobRepo) GetJobById(ctx context.Context, id string) (Job, error) {
@@ -183,6 +218,7 @@ func (r *JobRepo) UpdateJob(ctx context.Context, job Job) error {
 		WHERE
 				id = ?
 	`
+	appliedDate := time.Time(job.AppliedDate).Format("2006-01-02")
 	_, err := r.db.ExecContext(
 		ctx, query, 
 		job.Position,
@@ -195,7 +231,7 @@ func (r *JobRepo) UpdateJob(ctx context.Context, job Job) error {
 		job.WorkType,
 		job.Status,
 		job.Priority,
-		job.AppliedDate,
+		appliedDate,
 		job.Notes,
 		job.ID,
 	)
@@ -244,8 +280,7 @@ func (r *JobRepo) insertBuilder(job Job) (string, []interface{}) {
 		"priority", "applied_date", "salary_currency",
 	}
 
-	str, _ := job.AppliedDate.MarshalJSON()
-	appliedDate := string(str)
+	appliedDate := time.Time(job.AppliedDate).Format("2006-01-02")
 
 	baseValue := []interface{}{
 		job.ID, job.User_ID, job.Position, job.Company, job.Platform,

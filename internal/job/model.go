@@ -18,9 +18,9 @@ type JobRequest struct {
 	Location       string      `json:"location" validate:"required"`
 	EmploymentType string      `json:"employment_type" validate:"required"`
 	WorkType       string      `json:"work_type" validate:"required"`
-	Status         string      `json:"status" validate:"required"`
+  Status         string      `json:"status" validate:"required"`
 	Priority       string      `json:"priority" validate:"required"`
-	AppliedDate    Date   `json:"applied_date" validate:"required"`
+	AppliedDate    Date   		 `json:"applied_date" validate:"required"`
 	Notes          NullString  `json:"notes"`
 	IsActive       bool        `json:"is_active"`
 }
@@ -50,7 +50,7 @@ func (j *GetJob) Validate() error {
 type Job struct {
 	ID             string      `db:"id"`
 	User_ID        string      `db:"use_id"`
-	Position        string      `db:"position"`
+	Position       string      `db:"position"`
 	Company        string      `db:"company"`
 	Platform       string      `db:"platform"`
 	Salary         NullFloat64 `db:"salary"`
@@ -60,11 +60,20 @@ type Job struct {
 	WorkType       string      `db:"work_type"`
 	Status         string      `db:"status"`
 	Priority       string      `db:"priority"`
-	AppliedDate    Date   `db:"applied_date"`
+	AppliedDate    Date   		 `db:"applied_date"`
 	Notes          NullString  `db:"notes"`
 	IsActive       bool        `db:"is_active"`
 	CreatedAt      time.Time   `db:"created_at"`
 	UpdatedAt      time.Time   `db:"updated_at"`
+}
+
+type Stat struct {
+  TotalApplication  int `db:"total_application"`
+  Pending           int `db:"pending"`
+  Interview         int `db:"interview"`
+  Offer             int `db:"offer"`
+  Rejected          int `db:"rejected"`
+  WithDraw          int `db:"withdraw"`
 }
 
 // Null String custom Marshal/Unmarshaler
@@ -142,5 +151,5 @@ func (d *Date) UnmarshalJSON(data []byte) error {
 }
 
 func (d Date) MarshalJSON() ([]byte, error) {
-	return []byte(time.Time(d).Format("2006-01-02")), nil
+	return json.Marshal(time.Time(d).Format("2006-01-02"))
 }
