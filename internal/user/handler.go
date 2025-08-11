@@ -45,7 +45,7 @@ func (h *userHandler) RegisterRoute(r *fiber.App) {
 
 	userGroup.Post("/register", h.RegisterUser)
 	userGroup.Post("/login", h.LoginUser)
-	userGroup.Get("/auth", authMiddleware, h.VerifyAuth)
+	userGroup.Get("/me", authMiddleware, h.GetVerifiedUser)
 	userGroup.Patch("/name", authMiddleware, h.ChangeName)
 }
 
@@ -273,12 +273,12 @@ func (h *userHandler) updateName(ctx context.Context, payload ChangeNameRequest)
 	return nil
 }
 
-func (h *userHandler) VerifyAuth(c *fiber.Ctx) error {
+func (h *userHandler) GetVerifiedUser(c *fiber.Ctx) error {
 	if err := h.ratelimiter.Middleware(c.IP()); err != nil {
 		return err
 	}
 
-	_, err := jwt.GetLoggedInUser(c)
+	claim, err := jwt.GetLoggedInUser(c)
 	if err != nil {
 		return c.Status(fiber.StatusForbidden).JSON(model.ErrorResponse{
 			Status: "fail",
@@ -286,9 +286,21 @@ func (h *userHandler) VerifyAuth(c *fiber.Ctx) error {
 		})
 	}
 
+  email := claim.Email
+  user, err := h.userRepo.GetUserByEmail(c.Context(), email)
+  if err != nil {
+    return err
+  }
+
 	return c.Status(fiber.StatusOK).JSON(model.DataResponse{
 		Status: "success",
 		Message: "User validated",
+    Data: LoggedUserData{
+      Id: user.ID,
+      Username: user.Username,
+      DisplayName: user.DisplayName, 
+      Email: user.Email,
+    },
 	})
 }
 
