@@ -1,8 +1,13 @@
 package job
 
 import (
+	"bytes"
+	"database/sql"
+	"io"
 	"strconv"
+	"time"
 
+	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/Cakra17/JobTracker-Api/internal/model"
 	"github.com/Cakra17/JobTracker-Api/internal/ratelimiter"
 	"github.com/Cakra17/JobTracker-Api/pkg/jwt"
@@ -41,6 +46,8 @@ func (h *jobHandler) RegisterRoute(r *fiber.App) {
 	jobGroup.Patch("/state/:id", authMiddleware, h.ChangeState)
 	jobGroup.Delete("/:id", authMiddleware, h.DeleteJob)
 	jobGroup.Put("/:id", authMiddleware, h.UpdateJobById)
+
+  jobGroup.Post("/bulk", authMiddleware, h.BulkCreateApplications)
 }
 
 func (h *jobHandler) AddJob(c *fiber.Ctx) error {
@@ -75,7 +82,7 @@ func (h *jobHandler) AddJob(c *fiber.Ctx) error {
 	job := Job{
 		ID: uuid.NewString(),
 		User_ID: claim.UserID,
-		Position: payload.Postion,
+		Position: payload.Position,
 		Company: payload.Company,
 		Platform: payload.Platform,
 		Location: payload.Location,
@@ -84,7 +91,7 @@ func (h *jobHandler) AddJob(c *fiber.Ctx) error {
 		WorkType: payload.WorkType,
 		Status: payload.Status,
 		Priority: payload.Priority,
-		AppliedDate: payload.AppliedDate,
+		AppliedDate: time.Time(payload.AppliedDate),
 		Salary: payload.Salary,
 		Notes: payload.Notes,
 	}
@@ -118,6 +125,112 @@ func (h *jobHandler) AddJob(c *fiber.Ctx) error {
 	})
 }
 
+func (h *jobHandler) BulkCreateApplications(c *fiber.Ctx) error {
+  if err := h.ratelimiter.Middleware(c.IP()); err != nil {
+    return err
+  }
+
+  claim, err := jwt.GetLoggedInUser(c)
+  if err != nil {
+    return c.Status(fiber.StatusForbidden).JSON(model.ErrorResponse{
+      Status: "fail",
+			Message: "Forbidden request",
+    })
+  }
+  
+  userId := claim.UserID
+  formFile, err := c.FormFile("data")
+  if err != nil {
+    return err
+  }
+
+  file, err := formFile.Open()
+  if err != nil {
+    return err
+  }
+
+  fileContent, err := io.ReadAll(file)
+  if err != nil {
+    return err
+  }
+  
+  excel, err := excelize.OpenReader(bytes.NewReader(fileContent))
+  if err != nil {
+    return err
+  }
+
+  sheetName := "Sheet1"
+
+  error := make([]BulkError, 0)
+  rows := excel.GetRows(sheetName)
+  success := 0
+
+  for i, row := range rows {
+    if  i == 0 {
+      continue
+    } 
+    
+    isSalaryValid := true
+    salary, err := strconv.ParseFloat(row[3], 64)
+    if err != nil {
+      isSalaryValid = false
+    }
+    
+    AppliedDate := ConvertFromRawExcelToDate(row[10])
+
+    cell := Job{
+      ID: uuid.NewString(),
+      User_ID: userId,
+      Position: row[0],
+      Platform: row[1],
+      Company: row[2],
+      Salary: NullFloat64{ sql.NullFloat64{Float64: salary, Valid: isSalaryValid} },
+      SalaryCurrency: row[4],
+      Location: row[5],
+      EmploymentType: row[6],
+      WorkType: row[7],
+      Status: row[8],
+      Priority: row[9],
+      AppliedDate: AppliedDate,
+      Notes: NullString{ sql.NullString{String: row[11], Valid: true} },
+    }
+
+    err = h.jobRepo.AddJob(c.Context(), cell)
+    if err != nil {
+      e := BulkError {
+        Index: i,
+        Error: err.Error(),
+      }
+      error = append(error, e)
+    } else {
+      success++
+    }
+  }
+
+  response := BulkApplicationResponse {
+    TotalRequested: success + len(error),
+    Successful: success,
+    Failed: len(error),
+    Errors: error,
+  }
+
+  if response.Failed == 0 {
+    return c.Status(fiber.StatusOK).JSON(model.DataResponse{
+      Status: "success",
+      Data: response,
+    })
+  } else if response.Successful == 0 {
+    return c.Status(fiber.StatusBadRequest).JSON(model.DataResponse{
+      Status: "fail",
+      Data: response,
+    })
+  } else {
+    return c.Status(fiber.StatusMultiStatus).JSON(model.DataResponse{
+      Status: "multi-status",
+      Data: response,
+    })  
+  }
+}
 
 func (h *jobHandler) GetAllJobByUserId(c *fiber.Ctx) error {
 	if err := h.ratelimiter.Middleware(c.IP()); err != nil {
@@ -265,7 +378,7 @@ func (h *jobHandler) UpdateJobById(c *fiber.Ctx) error {
 
 	job := Job{
 		ID: id,
-		Position: payload.Postion,
+		Position: payload.Position,
 		Company: payload.Company,
 		Platform: payload.Platform,
 		Salary: payload.Salary,
@@ -275,7 +388,7 @@ func (h *jobHandler) UpdateJobById(c *fiber.Ctx) error {
 		WorkType: payload.WorkType,
 		Status: payload.Status,
 		Priority: payload.Priority,
-		AppliedDate: payload.AppliedDate,
+		AppliedDate: time.Time(payload.AppliedDate),
 		Notes: payload.Notes,
 	}
 

@@ -30,8 +30,20 @@ type FullResponse struct {
 	WorkType       string    `json:"work_type"`
 	Status         string    `json:"status"`
 	Priority       string    `json:"priority"`
-	AppliedDate    Date 		 `json:"applied_date"`
+	AppliedDate    time.Time `json:"applied_date"`
 	Notes          string    `json:"notes"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+type BulkApplicationResponse struct {
+  TotalRequested int          `json:"total_requested"`
+  Successful     int          `json:"successful"`
+  Failed         int          `json:"failed"`
+  Errors         []BulkError  `json:"errors"`
+}
+
+type BulkError struct {
+  Index int    `json:"index"`
+  Error string `json:"error"`
 }

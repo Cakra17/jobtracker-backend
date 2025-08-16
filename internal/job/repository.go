@@ -63,7 +63,7 @@ func (r *JobRepo) GetJobByUserId(ctx context.Context, payload GetJob) ([]Job, er
 				is_active = 1
 		ORDER BY created_at DESC
 	`
-	args := []interface{}{payload.UserId}
+	args := []any{payload.UserId}
 
 	limitQuery, limitArgs := getLimitAndOffset(payload)
 	args = append(args, limitArgs...)
@@ -100,7 +100,7 @@ func (r *JobRepo) GetJobByUserId(ctx context.Context, payload GetJob) ([]Job, er
 	return jobs, nil
 }
 
-func getLimitAndOffset(req GetJob) (string, []interface{}) {
+func getLimitAndOffset(req GetJob) (string, []any) {
 	query := `LIMIT ? OFFSET ?`
 
 	limit := req.Limit
@@ -110,7 +110,7 @@ func getLimitAndOffset(req GetJob) (string, []interface{}) {
 
 	offset := req.Offset
 
-	args := []interface{}{limit, offset}
+	args := []any{limit, offset}
 
 	return query, args
 }
@@ -273,7 +273,7 @@ func (r *JobRepo) HardDelete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (r *JobRepo) insertBuilder(job Job) (string, []interface{}) {
+func (r *JobRepo) insertBuilder(job Job) (string, []any) {
 	baseColumn := []string{
 		"id", "user_id", "position", "company", "platform",
 		"location", "employment_type", "work_type", "status",
@@ -282,7 +282,7 @@ func (r *JobRepo) insertBuilder(job Job) (string, []interface{}) {
 
 	appliedDate := time.Time(job.AppliedDate).Format("2006-01-02")
 
-	baseValue := []interface{}{
+	baseValue := []any{
 		job.ID, job.User_ID, job.Position, job.Company, job.Platform,
 		job.Location, job.EmploymentType, job.WorkType, job.Status,
 		job.Priority, appliedDate, job.SalaryCurrency,

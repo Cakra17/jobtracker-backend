@@ -10,7 +10,7 @@ import (
 )
 
 type JobRequest struct {
-	Postion        string      `json:"position" validate:"required"`
+	Position       string      `json:"position" validate:"required"`
 	Platform       string      `json:"platform" validate:"required"`
 	Company        string      `json:"company" validate:"required"`
 	Salary         NullFloat64 `json:"salary"`
@@ -22,7 +22,6 @@ type JobRequest struct {
 	Priority       string      `json:"priority" validate:"required"`
 	AppliedDate    Date   		 `json:"applied_date" validate:"required"`
 	Notes          NullString  `json:"notes"`
-	IsActive       bool        `json:"is_active"`
 }
 
 type GetJob struct {
@@ -60,7 +59,7 @@ type Job struct {
 	WorkType       string      `db:"work_type"`
 	Status         string      `db:"status"`
 	Priority       string      `db:"priority"`
-	AppliedDate    Date   		 `db:"applied_date"`
+	AppliedDate    time.Time   `db:"applied_date"`
 	Notes          NullString  `db:"notes"`
 	IsActive       bool        `db:"is_active"`
 	CreatedAt      time.Time   `db:"created_at"`
@@ -152,4 +151,9 @@ func (d *Date) UnmarshalJSON(data []byte) error {
 
 func (d Date) MarshalJSON() ([]byte, error) {
 	return json.Marshal(time.Time(d).Format("2006-01-02"))
+}
+
+func ConvertFromRawExcelToDate(d string) time.Time {
+  parsed,_ := time.Parse("01-02-06", d)
+  return parsed
 }
