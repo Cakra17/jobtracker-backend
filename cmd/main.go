@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/Cakra17/JobTracker-Api/internal/config"
+	"github.com/Cakra17/JobTracker-Api/internal/cvgenerator"
 	"github.com/Cakra17/JobTracker-Api/internal/job"
 	"github.com/Cakra17/JobTracker-Api/internal/ratelimiter"
 	"github.com/Cakra17/JobTracker-Api/internal/user"
@@ -47,6 +48,8 @@ func main() {
 	userRepo := user.NewUserRepo(db)
 	jobRepo := job.NewJobRepo(db)
 
+  templateRenderer := cvgenerator.NewTemplateRenderer("templates/ats-friendly/") 
+  generator := cvgenerator.NewPdfGenerator(templateRenderer)
 	// handler
 	userHandler := user.NewUserHandler(user.UserHandlerConfig{
 		UserRepo: &userRepo,
@@ -61,9 +64,16 @@ func main() {
 		RateLimiter: &rateLimiter,
 	})
 
+  resumeHandler := cvgenerator.NewCVGenerator(cvgenerator.ResumeHandlerConfig{
+    PdfGenerator: &generator,
+    JWTProvider: &jwtProvider,
+    RateLimiter: &rateLimiter,
+  }) 
+
 	// route registration
 	userHandler.RegisterRoute(app)
 	jobHandler.RegisterRoute(app)
+  resumeHandler.RegisterRoute(app)
 	
 	addr := fmt.Sprintf(":%s", cfg.AppPort)
 
