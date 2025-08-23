@@ -1,0 +1,187 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  color: #333;
+  background: white;
+}
+
+.resume-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px;
+  background: white;
+}
+
+/* Header Styles */
+.header {
+  text-align: center;
+  border-bottom: 3px solid #2c3e50;
+  padding-bottom: 20px;
+  margin-bottom: 30px;
+}
+
+.name {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 10px;
+  letter-spacing: -0.5px;
+}
+
+.contact-info {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.contact-info span {
+  font-size: 0.95rem;
+  color: #555;
+}
+
+/* Section Styles */
+.section {
+  margin-bottom: 30px;
+}
+
+.section-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #2c3e50;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Experience Styles */
+.job {
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.job:last-child {
+  border-bottom: none;
+}
+
+.job-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 5px;
+}
+
+.job-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.company {
+  font-size: 1.1rem;
+  color: #3498db;
+  font-weight: 500;
+}
+
+.job-meta {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.job-description {
+  margin-bottom: 10px;
+  text-align: justify;
+}
+
+.achievements {
+  list-style: none;
+  padding-left: 0;
+}
+
+.achievements li {
+  position: relative;
+  padding-left: 20px;
+  margin-bottom: 5px;
+}
+
+.achievements li:before {
+  content: "▸";
+  color: #3498db;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
+/* Skills Styles */
+.skills-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.skill-tag {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* Education Styles */
+.education-item {
+  margin-bottom: 15px;
+}
+
+.degree {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 5px;
+}
+
+.institution {
+  font-size: 1rem;
+  color: #3498db;
+  margin-bottom: 3px;
+}
+
+.edu-dates, .gpa {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Print-specific styles */
+@media print {
+  .resume-container {
+    padding: 20px;
+    max-width: none;
+  }
+  
+  .section {
+    page-break-inside: avoid;
+  }
+  
+  .job {
+    page-break-inside: avoid;
+  }
+}
+
+/* PDF-specific adjustments */
+@page {
+  margin: 0.5in;
+  size: letter;
+}

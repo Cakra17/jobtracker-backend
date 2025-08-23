@@ -1,0 +1,86 @@
+<!-- templates/modern/template.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./style.css">
+    <title>{{.PersonalInfo.FullName}} - Resume</title>
+</head>
+<body>
+    <div class="resume-container">
+        <!-- Header Section -->
+        <header class="header">
+            <h1 class="name">{{.PersonalInfo.FullName}}</h1>
+            <div class="contact-info">
+                <span class="email">{{.PersonalInfo.Email}}</span>
+                <span class="phone">{{.PersonalInfo.Phone}}</span>
+                {{if .PersonalInfo.Location}}<span class="location">{{.PersonalInfo.Location}}</span>{{end}}
+            </div>
+            {{if .PersonalInfo.LinkedIn}}<div class="social">LinkedIn: {{.PersonalInfo.LinkedIn}}</div>{{end}}
+        </header>
+
+        <!-- Summary Section -->
+        {{if .Summary}}
+        <section class="section summary">
+            <h2 class="section-title">Professional Summary</h2>
+            <p class="summary-text">{{.Summary}}</p>
+        </section>
+        {{end}}
+
+        <!-- Experience Section -->
+        {{if .Experience}}
+        <section class="section experience">
+            <h2 class="section-title">Experience</h2>
+            {{range .Experience}}
+            <div class="job">
+                <div class="job-header">
+                    <h3 class="job-title">{{.JobTitle}}</h3>
+                    <span class="company">{{.Company}}</span>
+                </div>
+                <div class="job-meta">
+                    <span class="dates">{{.StartDate.Format "Jan 2006"}} - {{if .EndDate}}{{.EndDate.Format "Jan 2006"}}{{else}}Present{{end}}</span>
+                    {{if .Location}}<span class="location">{{.Location}}</span>{{end}}
+                </div>
+                {{if .Description}}<p class="job-description">{{.Description}}</p>{{end}}
+                {{if .Achievements}}
+                <ul class="achievements">
+                    {{range .Achievements}}
+                    <li>{{.}}</li>
+                    {{end}}
+                </ul>
+                {{end}}
+            </div>
+            {{end}}
+        </section>
+        {{end}}
+
+        <!-- Skills Section -->
+        {{if .Skills}}
+        <section class="section skills">
+            <h2 class="section-title">Skills</h2>
+            <div class="skills-grid">
+                {{range .Skills}}
+                <span class="skill-tag">{{.Name}}</span>
+                {{end}}
+            </div>
+        </section>
+        {{end}}
+
+        <!-- Education Section -->
+        {{if .Education}}
+        <section class="section education">
+            <h2 class="section-title">Education</h2>
+            {{range .Education}}
+            <div class="education-item">
+                <h3 class="degree">{{.Degree}}</h3>
+                <div class="institution">{{.Institution}}</div>
+                <div class="edu-dates">{{.StartDate.Format "2006"}} - {{if .EndDate}}{{.EndDate.Format "2006"}}{{else}}Present{{end}}</div>
+                {{if .GPA}}<div class="gpa">GPA: {{.GPA}}</div>{{end}}
+            </div>
+            {{end}}
+        </section>
+        {{end}}
+    </div>
+</body>
+</html>
