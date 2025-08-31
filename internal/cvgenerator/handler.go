@@ -33,7 +33,7 @@ func NewCVGenerator(rhc ResumeHandlerConfig) resumeHandler {
 
 func (h *resumeHandler) RegisterRoute(r *fiber.App) {
   authMiddleware := h.jwtProvider.Middleware()
-  resumeGroup := r.Group("/v1/resumes")
+  resumeGroup := r.Group("api/v1/resumes")
 
   resumeGroup.Post("/generate/pdf", authMiddleware, h.GeneratePDF)
 }

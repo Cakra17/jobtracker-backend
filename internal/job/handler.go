@@ -38,7 +38,7 @@ func NewJobHandler(jhCfg JobHandlerConfig) jobHandler {
 
 func (h *jobHandler) RegisterRoute(r *fiber.App) {
 	authMiddleware := h.jwtProvider.Middleware()
-	jobGroup := r.Group("v1/jobs")
+	jobGroup := r.Group("api/v1/jobs")
 
 	jobGroup.Post("/", authMiddleware, h.AddJob)
 	jobGroup.Get("/users", authMiddleware, h.GetAllJobByUserId)

@@ -41,7 +41,7 @@ func NewUserHandler(cfg UserHandlerConfig) userHandler {
 
 func (h *userHandler) RegisterRoute(r *fiber.App) {
 	authMiddleware := h.jwtProvider.Middleware()
-	userGroup := r.Group("v1/user")
+	userGroup := r.Group("api/v1/users")
 
 	userGroup.Post("/register", h.RegisterUser)
 	userGroup.Post("/login", h.LoginUser)
